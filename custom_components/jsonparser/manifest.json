@@ -1,0 +1,8 @@
+{
+  "domain": "jsonparser",
+  "name": "jsonparser",
+  "documentation": "https://github.com/aalavender/JsonParser/blob/master/README.md",
+  "dependencies": [],
+  "codeowners": ["@aalavender"],
+  "requirements": ["requests"]
+}

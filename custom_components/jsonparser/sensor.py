@@ -6,6 +6,7 @@ https://github.com/aalavender/JsonParser
 
 """
 import logging
+import asyncio
 import voluptuous as vol
 from datetime import timedelta
 from homeassistant.helpers.entity import Entity
@@ -37,21 +38,28 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ATTR_TO, default=10): cv.positive_int,
 })
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    add_devices([JsonParserSensor(hass, config)])
+
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+    _LOGGER.info("start async_setup_platform JsonParserSensor")
+    url = config[CONF_URL]
+    name = config[CONF_NAME]
+    json_attr = config[CONF_JSON_ATTR]
+    attr_from = config[CONF_ATTR_FROM]
+    attr_to = config[CONF_ATTR_TO]
+    async_add_devices([JsonParserSensor(url, name, json_attr, attr_from, attr_to)], True)
+
 
 class JsonParserSensor(Entity):
-    def __init__(self, hass, config):
-        self.hass = hass
-        self._url = config[CONF_URL]
-        self._name = config[CONF_NAME]
-        self._json_attr = config[CONF_JSON_ATTR]
-        self._attr_from = config[CONF_ATTR_FROM]
-        self._attr_to = config[CONF_ATTR_TO]
+    def __init__(self, url, name, json_attr, attr_from, attr_to):
+        self._url = url
+        self._name = name
+        self._json_attr = json_attr
+        self._attr_from = attr_from
+        self._attr_to = attr_to
 
         self._state = None
         self._entries = []
-        self.update()
 
     def update(self):
         _LOGGER.info("sensor JsonParserSensor update from " + self._url)
@@ -64,6 +72,7 @@ class JsonParserSensor(Entity):
             ff = self._attr_from - 1 if self._attr_from > 0 else 0
             tt = self._attr_to if len(json_data[self._json_attr]) > self._attr_to else len(json_data[self._json_attr])
             self._state = tt - ff
+            self._entries = []
             for i in range(ff, tt):
                 self._entries.append(json_data[self._json_attr][i])
 
